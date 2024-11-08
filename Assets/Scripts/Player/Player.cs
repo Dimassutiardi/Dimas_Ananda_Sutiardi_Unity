@@ -23,7 +23,7 @@ public class Player : MonoBehaviour
     {
         // Mengambil referensi dari komponen PlayerMovement dan Animator
         playerMovement = GetComponent<PlayerMovement>();
-        animator = GetComponent<Animator>();
+        animator = transform.Find("Engine/EngineEffect").GetComponent<Animator>();
     }
 
     private void FixedUpdate()

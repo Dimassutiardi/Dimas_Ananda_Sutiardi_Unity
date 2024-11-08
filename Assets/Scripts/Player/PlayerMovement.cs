@@ -6,59 +6,48 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Vector2 timeToFullSpeed;
     [SerializeField] private Vector2 timeToStop;
     [SerializeField] private Vector2 stopClamp;
-
     private Vector2 moveDirection;
     private Vector2 moveVelocity;
     private Vector2 moveFriction;
     private Vector2 stopFriction;
     private Rigidbody2D rb;
 
+    private Vector2 minBounds;
+    private Vector2 maxBounds;
+
     private void Start()
     {
-        // Mengambil komponen Rigidbody2D dan mengatur nilai awal
         rb = GetComponent<Rigidbody2D>();
+        moveVelocity = 2 * maxSpeed / timeToFullSpeed;
+        moveFriction = -2 * maxSpeed / (timeToFullSpeed * timeToFullSpeed);
+        stopFriction = -2 * maxSpeed / (timeToStop * timeToStop);
 
-        // Kalkulasi kecepatan dan friksi berdasarkan waktu yang dibutuhkan untuk akselerasi dan berhenti
-        moveVelocity = maxSpeed / timeToFullSpeed;
-        moveFriction = moveVelocity / timeToFullSpeed;
-        stopFriction = moveVelocity / timeToStop;
+        // Menentukan batas pergerakan dari kamera
+        Camera cam = Camera.main;
+        minBounds = cam.ViewportToWorldPoint(new Vector3(0, 0, cam.nearClipPlane));
+        maxBounds = cam.ViewportToWorldPoint(new Vector3(1, 1, cam.nearClipPlane));
     }
 
     public void Move()
     {
-        // Mendapatkan input dari pemain
-        float moveX = Input.GetAxis("Horizontal");
-        float moveY = Input.GetAxis("Vertical");
+        float inputX = Input.GetAxis("Horizontal");
+        float inputY = Input.GetAxis("Vertical");
+        moveDirection = new Vector2(inputX, inputY).normalized;
 
-        // Mengatur arah gerakan berdasarkan input
-        moveDirection = new Vector2(moveX, moveY).normalized;
+        rb.velocity = moveDirection * maxSpeed;
 
-        Vector2 velocity = rb.velocity;
-        Vector2 targetVelocity = moveDirection * moveVelocity;
-        Vector2 friction = GetFriction(velocity);
-
-        // Memperbarui kecepatan berdasarkan friksi dan arah gerakan
-        rb.velocity = Vector2.ClampMagnitude(velocity + targetVelocity - friction, maxSpeed.magnitude);
+        float clampedX = Mathf.Clamp(transform.position.x, minBounds.x, maxBounds.x);
+        float clampedY = Mathf.Clamp(transform.position.y, minBounds.y, maxBounds.y);
+        transform.position = new Vector2(clampedX, clampedY);
     }
 
-    private Vector2 GetFriction(Vector2 velocity)
+    private Vector2 GetFriction()
     {
-        // Menghitung gesekan berdasarkan komponen kecepatan
-        if (velocity.magnitude > stopClamp.magnitude)
-        {
-            return moveFriction * velocity.normalized;
-        }
-        return stopFriction * velocity.normalized;
-    }
-
-    private void MoveBound()
-    {
-        // Implementasikan batas-batas pergerakan jika diperlukan
+        return rb.velocity.magnitude > 0 ? stopFriction : Vector2.zero;
     }
 
     public bool IsMoving()
     {
-        // Mengembalikan true jika pemain sedang bergerak
-        return rb.velocity.magnitude > stopClamp.magnitude;
+        return rb.velocity.magnitude > 0.1f;
     }
 }
