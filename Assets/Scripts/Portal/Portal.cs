@@ -44,6 +44,7 @@ public class Portal : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             // Use LevelManager to load the main scene
+            Debug.Log("aaa");
             GameManager.Instance.LevelManager.LoadScene("Main");
         }
     }
