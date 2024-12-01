@@ -1,73 +1,87 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
+using System.Collections;
 
-public class Weapon : MonoBehaviour{
+public class Weapon : MonoBehaviour
+{   
     [Header("Weapon Stats")]
-    [SerializeField] private float shootIntervalInSeconds = 3f;
+    [SerializeField] public float shootIntervalInSeconds = 3f; // Change to public
+    [SerializeField] private bool isEnemyBossWeapon; // Add this line
 
     [Header("Bullets")]
     public Bullet bullet;
     [SerializeField] private Transform bulletSpawnPoint;
 
+
     [Header("Bullet Pool")]
     private IObjectPool<Bullet> objectPool;
 
-    //private readonly bool collectionCheck = false;
-    //private readonly int defaultCapacity = 30;
-    //private readonly int maxSize = 100;
+
+    private readonly bool collectionCheck = false;
+    private readonly int defaultCapacity = 30;
+    private readonly int maxSize = 100;
     private float timer;
     public Transform parentTransform;
 
-    private void Start()
-    {
+    void Awake(){
         objectPool = new ObjectPool<Bullet>(
-            CreateBullet,
-            OnBulletGet,
-            OnBulletRelease,
-            OnBulletDestroy,
-            collectionCheck: false,
-            defaultCapacity: 30,
-            maxSize: 100
+            CreateBulletItem, 
+            OnGetFromPool, 
+            OnReleaseToPool, 
+            OnDestroyPoolObject, 
+            collectionCheck, 
+            defaultCapacity, 
+            maxSize
         );
-    }
-
-    private void Update()
+    }    
+    void Update()
     {
         timer += Time.deltaTime;
-        if (timer >= shootIntervalInSeconds)
+        float interval =  shootIntervalInSeconds; // Adjust the intervalot
+        if (timer >= interval)
         {
-            Shoot();
-            timer = 0;
+            timer = 0f;
+            Bullet bulletInstance = objectPool.Get();
+            // No need to start the coroutine here
         }
     }
 
-    private void Shoot()
+    public void Fire(Vector3 position, Quaternion rotation)
     {
-        Bullet newBullet = objectPool.Get();
-        newBullet.transform.position = bulletSpawnPoint.position;
-        newBullet.transform.rotation = bulletSpawnPoint.rotation;
+        float interval =  shootIntervalInSeconds; // Adjust the interval
+        if (timer >= interval)
+        {
+            timer = 0f;
+            Bullet bulletInstance = objectPool.Get();
+            bulletInstance.transform.position = position;
+            bulletInstance.transform.rotation = rotation;
+            bulletInstance.Initialize();
+        }
     }
 
-    private Bullet CreateBullet()
+    Bullet CreateBulletItem()
     {
-        return Instantiate(bullet, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+        Bullet bulletInstance = Instantiate(bullet);
+        bulletInstance.ObjectPool = objectPool; 
+        return bulletInstance;
     }
 
-    private void OnBulletGet(Bullet bullet)
+    void OnGetFromPool(Bullet bullet)
     {
+        bullet.ObjectPool = objectPool; // Ensure the ObjectPool property is set
         bullet.gameObject.SetActive(true);
+        bullet.transform.position = bulletSpawnPoint.position;
+        bullet.transform.rotation = bulletSpawnPoint.rotation;
+        bullet.Initialize(); 
     }
 
-    private void OnBulletRelease(Bullet bullet)
+    void OnReleaseToPool(Bullet bullet)
     {
         bullet.gameObject.SetActive(false);
     }
 
-    private void OnBulletDestroy(Bullet bullet)
+    void OnDestroyPoolObject(Bullet bullet)
     {
         Destroy(bullet.gameObject);
     }
 }
-

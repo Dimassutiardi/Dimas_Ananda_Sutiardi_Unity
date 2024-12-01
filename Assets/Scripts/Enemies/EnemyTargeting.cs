@@ -5,7 +5,7 @@ using UnityEngine;
 public class EnemyTargeting : Enemy
 {
     private Transform playerTransform;
-
+    private float speed = 2.0f; 
     void Start()
     {
         // Cari Player di scene berdasarkan tag "Player"
@@ -19,12 +19,6 @@ public class EnemyTargeting : Enemy
             Debug.LogError("Player not found! Please make sure there is an object with the 'Player' tag.");
         }
 
-        // Pastikan objek tidak berputar dan tidak terpengaruh gravitasi
-        if (TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
-        {
-            rb.freezeRotation = true; // Mencegah rotasi
-            rb.gravityScale = 0; // Mencegah objek jatuh
-        }
     }
 
     void Update()
@@ -33,15 +27,16 @@ public class EnemyTargeting : Enemy
         if (playerTransform != null)
         {
             // Hitung arah menuju Player dan normalisasi
-            direction = (playerTransform.position - transform.position).normalized;
-            Move(); // Panggil Move() untuk menggerakkan Enemy ke arah Player
-        }
+            Vector2 direction = (playerTransform.position - transform.position).normalized;
+            transform.Translate(direction * speed * Time.deltaTime);
+        } // Panggil Move() untuk menggerakkan Enemy ke arah Player
+        
     }
 
     // Ketika bersentuhan dengan Player, hancurkan objek Enemy
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (other.CompareTag("Player"))
+        if (collision.CompareTag("Player"))
         {
             Destroy(gameObject); // Menghancurkan Enemy
         }

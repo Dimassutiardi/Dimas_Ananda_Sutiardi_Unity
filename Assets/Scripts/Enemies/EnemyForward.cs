@@ -4,40 +4,35 @@ using UnityEngine;
 
 public class EnemyForward : Enemy
 {
-    private float screenLimitY;
-    private bool movingDown;
+    public float speed = 2f;
+    private float spawnRangeX = 8f;  // Rentang spawn di X
+    private float spawnY = 10f;      // Posisi Y spawn di atas layar
 
-    void Start()
+    private void Start()
     {
-        // Mendapatkan batas layar pada sumbu y berdasarkan ukuran kamera
-        screenLimitY = Camera.main.orthographicSize;
+        // Posisikan musuh secara acak di bagian atas layar
+        RespawnAtTop();
+    }
 
-        // Spawn di bagian atas layar dengan posisi x acak
-        transform.position = new Vector2(Random.Range(-Camera.main.orthographicSize * Camera.main.aspect, Camera.main.orthographicSize * Camera.main.aspect), screenLimitY);
-        movingDown = true; // Mulai bergerak ke bawah
+    private void Update()
+    {
+        // Gerakkan musuh ke bawah
+        transform.Translate(Vector2.down * speed * Time.deltaTime);
 
-        // Pastikan objek tidak berputar dan tidak terpengaruh gravitasi
-        if (TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
+        // Jika musuh keluar dari layar di bagian bawah, respawn di bagian atas layar
+        if (transform.position.y < -spawnY)
         {
-            rb.freezeRotation = true; // Mencegah rotasi karena fisika
-            rb.gravityScale = 0; // Mencegah objek jatuh
+            RespawnAtTop();
         }
     }
 
-    void Update()
+    // Method untuk memposisikan musuh secara acak di bagian atas layar
+    private void RespawnAtTop()
     {
-        // Tetapkan arah hanya pada sumbu y
-        direction = movingDown ? Vector2.down : Vector2.up;
-        Move();
+        float randomX = Random.Range(-spawnRangeX, spawnRangeX);  // Posisi spawn acak di kiri atau kanan
+        transform.position = new Vector2(randomX, spawnY);
 
-        // Periksa jika Enemy sudah keluar batas layar dan ubah arah jika diperlukan
-        if (movingDown && transform.position.y < -screenLimitY)
-        {
-            movingDown = false; // Ubah arah ke atas
-        }
-        else if (!movingDown && transform.position.y > screenLimitY)
-        {
-            movingDown = true; // Ubah arah ke bawah
-        }
+        // Pastikan rotasi tetap pada keadaan awal (menghadap ke bawah secara natural)
+        transform.rotation = Quaternion.identity;
     }
 }

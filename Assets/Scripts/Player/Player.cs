@@ -9,13 +9,14 @@ public class Player : MonoBehaviour
     private void Awake()
     {
         // Membuat instance Singleton untuk Player
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
+            Destroy(gameObject);
         }
         else
         {
-            Destroy(gameObject);
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
     }
 

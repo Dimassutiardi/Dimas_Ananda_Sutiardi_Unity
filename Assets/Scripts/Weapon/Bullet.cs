@@ -1,30 +1,55 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool; 
 
 public class Bullet : MonoBehaviour
 {
     [Header("Bullet Stats")]
-    public float bulletSpeed = 20f;
-    public int damage = 10;
-    private Rigidbody2D rb;
+    public float bulletSpeed = 20;
+    public int damage;
+    private Rigidbody2D rb;    
 
-    private void Awake()
+    public IObjectPool<Bullet> ObjectPool { get; set; }
+
+    void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        rb.velocity = transform.up * bulletSpeed;
     }
 
-    private void OnEnable()
+    void Update()
+    {
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        // HitboxComponent hitbox = collision.gameObject.GetComponent<HitboxComponent>();
+        // if (hitbox != null)
+        // {
+        //     hitbox.Damage(damage);
+        // }
+
+        ObjectPool.Release(this);
+    }
+
+    void OnBecameInvisible()
+    {
+        // Return bullet to pool when it goes off-screen
+        ObjectPool.Release(this);
+    }
+
+    public void ResetBullet()
     {
         rb.velocity = transform.up * bulletSpeed;
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    public void Initialize()
     {
-        // Logika ketika peluru bertabrakan dengan objek lain, seperti menghancurkan atau memberi damage
-        // Despawn bullet back to the pool, or destroy
-    }
-
-    private void OnBecameInvisible()
-    {
-        Destroy(gameObject);
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody2D>();
+        }
+        ResetBullet();
     }
 }

@@ -4,11 +4,16 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public float speed = 5f;
-    protected Vector2 direction;
+    public int Level;
+    public EnemySpawner enemySpawner;
+    public CombatManager combatManager;
 
-    protected virtual void Move()
+    private void OnDestroy()
     {
-        transform.Translate(direction * speed * Time.deltaTime);
+        if (enemySpawner != null && combatManager != null)
+        {
+            enemySpawner.onDeath();
+            combatManager.onDeath(this); // Pass the enemy instance to onDeath
+        }
     }
 }

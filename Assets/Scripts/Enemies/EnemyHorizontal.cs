@@ -2,54 +2,44 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class EnemyHorizontal : Enemy
 {
-    private float screenLimitX;
-    private bool movingRight;
+    public float speed = 2f;
+    private Vector2 moveDirection;
+    private float spawnRangeX = 8f;  // Rentang spawn di X
+    private float spawnYRange = 4f;  // Rentang spawn di Y
 
-    void Start()
+    private void Start()
     {
-        // Ambil batas layar berdasarkan ukuran kamera (hanya pada sumbu x)
-        float screenWidth = Camera.main.orthographicSize * Camera.main.aspect;
-        screenLimitX = screenWidth;
+        RespawnAtSide();
+    }
 
-        // Spawn acak dari sisi kiri atau kanan layar dan hanya bergerak pada sumbu x
-        if (Random.value > 0.5f)
-        {
-            // Spawn dari sisi kiri layar
-            transform.position = new Vector2(-screenLimitX, transform.position.y);
-            movingRight = true;
-        }
-        else
-        {
-            // Spawn dari sisi kanan layar
-            transform.position = new Vector2(screenLimitX, transform.position.y);
-            movingRight = false;
-        }
+    private void Update()
+    {
+        // Gerakkan musuh secara horizontal
+        transform.Translate(moveDirection * speed * Time.deltaTime);
 
-        // Pastikan objek tidak berputar
-        if (TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
+        // Jika musuh keluar dari layar di bagian kiri atau kanan, respawn di sisi berlawanan
+        if (transform.position.x < -spawnRangeX || transform.position.x > spawnRangeX)
         {
-            rb.freezeRotation = true; // Mencegah rotasi karena fisika
-            rb.gravityScale = 0; // Mencegah objek jatuh
+            RespawnAtSide();
         }
     }
 
-    void Update()
+    // Method untuk memposisikan musuh secara acak di sisi kiri atau kanan layar
+    private void RespawnAtSide()
     {
-        // Tetapkan arah hanya pada sumbu x
-        direction = movingRight ? Vector2.right : Vector2.left;
-        Move();
+        // Tentukan sisi spawn secara acak (kiri atau kanan)
+        float spawnX = Random.Range(0, 2) == 0 ? -spawnRangeX : spawnRangeX;
+        float spawnY = Random.Range(-spawnYRange, spawnYRange);
 
-        // Periksa batas layar, jika keluar, balik arah
-        if (movingRight && transform.position.x > screenLimitX)
-        {
-            movingRight = false; // Berbalik ke kiri
-        }
-        else if (!movingRight && transform.position.x < -screenLimitX)
-        {
-            movingRight = true; // Berbalik ke kanan
-        }
+        // Set posisi musuh di sisi kiri atau kanan dengan posisi Y acak
+        transform.position = new Vector2(spawnX, spawnY);
+
+        // Tentukan arah pergerakan horizontal berdasarkan sisi spawn
+        moveDirection = spawnX < 0 ? Vector2.right : Vector2.left;
+
+        // Pastikan rotasi tetap pada keadaan awal (menghadap arah horizontal)
+        transform.rotation = Quaternion.identity;
     }
 }
